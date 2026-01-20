@@ -1,0 +1,185 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Create Live Stream - Live Stream Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-primary">Create New Live Stream</h1>
+
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-control w-full mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Title</span>
+                    </label>
+                    <input type="text" name="title" placeholder="Enter live stream title" 
+                           class="input input-bordered w-full {% if form.title.errors %}input-error{% endif %}" 
+                           value="{{ form.title.value|default:'' }}" required />
+                    {% if form.title.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.title.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control w-full mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Description</span>
+                    </label>
+                    <textarea name="description" placeholder="Enter description (optional)" 
+                              class="textarea textarea-bordered w-full {% if form.description.errors %}textarea-error{% endif %}">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control w-full mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">File or URL (Input Source)</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="tabs tabs-bordered w-full">
+                            <input type="radio" name="input_type" class="tab" value="media" checked onclick="toggleInputType('media')" />
+                            <label class="tab-content">Media File</label>
+
+                            <input type="radio" name="input_type" class="tab" value="url" onclick="toggleInputType('url')" />
+                            <label class="tab-content">Custom URL</label>
+                        </div>
+                        
+                        <!-- Media File Selection -->
+                        <div id="media-input" class="space-y-2">
+                            {% if media_files %}
+                                <select id="media_select" class="select select-bordered w-full" onchange="updateInputField()">
+                                    <option value="">-- Select a media file --</option>
+                                    {% for media in media_files %}
+                                        <option value="{{ media.file.url }}" data-name="{{ media.file.name }}" data-size="{{ media.file.size|filesizeformat }}">
+                                            {{ media.file.name }} ({{ media.file.size|filesizeformat }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{% url 'upload_media' %}" class="link link-primary text-sm">Upload new media file</a>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div>
+                                        <span>No media files available.</span>
+                                        <a href="{% url 'upload_media' %}" class="link link-primary">Upload one now</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Custom URL Input -->
+                        <div id="url-input" class="hidden">
+                            <input type="text" placeholder="e.g., /path/to/file.mp4 or rtsp://stream.url" 
+                                   class="input input-bordered w-full" id="custom_url" />
+                        </div>
+                    </div>
+
+                    <input type="text" name="file_or_url" placeholder="Selected file or custom URL" 
+                           class="input input-bordered w-full mt-2 {% if form.file_or_url.errors %}input-error{% endif %}" 
+                           id="file_or_url_field" value="{{ form.file_or_url.value|default:'' }}" required />
+                    <label class="label">
+                        <span class="label-text-alt text-info">Select from media files or enter a custom path/URL</span>
+                    </label>
+                    {% if form.file_or_url.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.file_or_url.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control w-full mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Output RTMP URL</span>
+                    </label>
+                    <input type="text" name="output_rtmp" placeholder="e.g., rtmp://streaming.server/app/stream_key" 
+                           class="input input-bordered w-full {% if form.output_rtmp.errors %}input-error{% endif %}" 
+                           value="{{ form.output_rtmp.value|default:'' }}" required />
+                    <label class="label">
+                        <span class="label-text-alt text-info">RTMP endpoint for streaming</span>
+                    </label>
+                    {% if form.output_rtmp.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.output_rtmp.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control w-full mb-6">
+                    <label class="label">
+                        <span class="label-text font-semibold">FFmpeg Preset</span>
+                    </label>
+                    <select name="preset" class="select select-bordered w-full bg-base-100 text-base-content border-base-300 {% if form.preset.errors %}select-error{% endif %}">
+                        <option value="">-- Select a preset --</option>
+                        {% for preset in presets %}
+                            <option value="{{ preset.id }}" {% if form.preset.value == preset.id %}selected{% endif %}>{{ preset.preset_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label class="label">
+                        <span class="label-text-alt text-info">Choose a preset or <a href="{% url 'configure_ffmpeg' %}" class="link link-primary">create one</a></span>
+                    </label>
+                    {% if form.preset.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.preset.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="alert alert-info mb-4">
+                    <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-sm">Make sure you have configured an FFmpeg preset before creating a live stream.</span>
+                </div>
+
+                <div class="card-actions justify-between">
+                    <a href="{% url 'home' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Live Stream</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleInputType(type) {
+        const mediaInput = document.getElementById('media-input');
+        const urlInput = document.getElementById('url-input');
+        const fieldInput = document.getElementById('file_or_url_field');
+
+        if (type === 'media') {
+            mediaInput.classList.remove('hidden');
+            urlInput.classList.add('hidden');
+            updateInputField();
+        } else {
+            mediaInput.classList.add('hidden');
+            urlInput.classList.remove('hidden');
+            fieldInput.value = '';
+        }
+    }
+
+    function updateInputField() {
+        const mediaSelect = document.getElementById('media_select');
+        const fieldInput = document.getElementById('file_or_url_field');
+        const customUrl = document.getElementById('custom_url');
+
+        if (mediaSelect.value) {
+            fieldInput.value = mediaSelect.value;
+        } else if (customUrl.value) {
+            fieldInput.value = customUrl.value;
+        }
+    }
+
+    // Update field when custom URL changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const customUrl = document.getElementById('custom_url');
+        if (customUrl) {
+            customUrl.addEventListener('input', updateInputField);
+        }
+    });
+</script>
+{% endblock %}

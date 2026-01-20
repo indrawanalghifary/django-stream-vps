@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Upload Media - Live Stream Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Upload Media File</h1>
+
+    <div class="card bg-base-200 shadow-lg">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-control w-full">
+                    <label class="label">
+                        <span class="label-text font-semibold">Select Media File</span>
+                    </label>
+                    <input type="file" name="file" class="file-input file-input-bordered w-full {% if form.file.errors %}file-input-error{% endif %}" required />
+                    {% if form.file.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.file.errors.0 }}</span>
+                        </label>
+                    {% else %}
+                        <label class="label">
+                            <span class="label-text-alt text-info">Supported: MP4, MKV, AVI, MOV, WebM</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="card-actions justify-between mt-8">
+                    <a href="{% url 'home' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <a href="{% url 'view_media_files' %}" class="link link-primary">View all uploaded media files →</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Live Stream Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="card w-full max-w-sm shadow-xl bg-base-200">
+            <div class="card-body">
+                <h1 class="card-title text-2xl justify-center mb-6">
+                    🎥 Live Stream Manager
+                </h1>
+                
+                <form method="post" action="/accounts/login/">
+                    {% csrf_token %}
+                    
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text">Username</span>
+                        </label>
+                        <input type="text" name="username" placeholder="Username" class="input input-bordered w-full" required />
+                    </div>
+
+                    <div class="form-control w-full mt-4">
+                        <label class="label">
+                            <span class="label-text">Password</span>
+                        </label>
+                        <input type="password" name="password" placeholder="Password" class="input input-bordered w-full" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full mt-6">Login</button>
+                </form>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mt-4">
+                        <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l-2-2m0 0l-2-2m2 2l2-2m-2 2l-2 2m8-8l2 2m0 0l2 2m-2-2l-2 2m2-2l2-2"></path></svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

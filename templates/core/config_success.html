@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Config Success - Live Stream Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="alert alert-success mb-6">
+        <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>FFmpeg preset saved successfully!</span>
+    </div>
+
+    <div class="card bg-base-200 shadow-lg">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Preset Details</h2>
+            
+            <div class="space-y-4">
+                <div class="p-3 bg-base-100 rounded">
+                    <div class="font-semibold mb-2">Preset Name:</div>
+                    <div class="text-lg">{{ config.preset_name }}</div>
+                </div>
+                
+                <div class="p-3 bg-base-100 rounded">
+                    <div class="font-semibold mb-2">Parameters:</div>
+                    <code class="block font-mono text-sm p-2 bg-base-300 rounded overflow-x-auto">{{ config.parameters }}</code>
+                </div>
+            </div>
+
+            <div class="card-actions justify-between mt-8">
+                <a href="{% url 'configure_ffmpeg' %}" class="btn btn-outline">Create Another</a>
+                <a href="{% url 'list_ffmpeg_configs' %}" class="btn btn-primary">View All Presets</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

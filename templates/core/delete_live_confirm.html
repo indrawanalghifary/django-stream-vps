@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Live Stream - Live Stream Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="alert alert-error mb-6">
+        <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0-12a9 9 0 110 18 9 9 0 010-18z"></path></svg>
+        <span>This action cannot be undone!</span>
+    </div>
+
+    <div class="card bg-base-200 shadow-lg">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Delete Live Stream?</h2>
+            
+            <div class="space-y-3 mb-6">
+                <div class="p-3 bg-base-100 rounded">
+                    <div class="font-semibold">Title:</div>
+                    <div class="text-lg">{{ live.title }}</div>
+                </div>
+                
+                <div class="p-3 bg-base-100 rounded">
+                    <div class="font-semibold">Description:</div>
+                    <div>{{ live.description|default:"No description" }}</div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mb-6">
+                <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>All associated logs will also be deleted. Are you sure?</span>
+            </div>
+
+            <form method="post" class="card-actions justify-between">
+                {% csrf_token %}
+                <a href="{% url 'home' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-error">Delete Live Stream</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

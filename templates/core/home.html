@@ -1,0 +1,202 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Live Stream Manager{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
+    <div class="stat bg-base-100 rounded-lg border border-base-300 shadow">
+        <div class="stat-title text-base-content">Total Live Streams</div>
+        <div class="stat-value text-primary">{{ lives|length }}</div>
+    </div>
+    <div class="stat bg-base-100 rounded-lg border border-base-300 shadow">
+        <div class="stat-title text-base-content">Active Streams</div>
+        <div class="stat-value text-success">0</div>
+    </div>
+    <div class="stat bg-base-100 rounded-lg border border-base-300 shadow">
+        <div class="stat-title text-base-content">Total Logs</div>
+        <div class="stat-value text-warning">0</div>
+    </div>
+    <div class="stat bg-base-100 rounded-lg border border-base-300 shadow">
+        <div class="stat-title text-base-content">Quick Action</div>
+        <div class="stat-desc">
+            <a href="{% url 'upload_media' %}" class="link link-primary font-semibold">Upload Media</a>
+        </div>
+    </div>
+</div>
+
+<div class="flex flex-col gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <h2 class="text-2xl font-bold text-primary">🎬 Live Streams</h2>
+        <div class="flex gap-2 flex-wrap">
+            <a href="{% url 'create_live' %}" class="btn btn-sm btn-success">➕ New Live Stream</a>
+            <a href="{% url 'configure_ffmpeg' %}" class="btn btn-sm btn-outline">⚙️ Configure FFmpeg</a>
+            <a href="{% url 'list_ffmpeg_configs' %}" class="btn btn-sm btn-outline">📋 View Configs</a>
+        </div>
+    </div>
+</div>
+
+{% if lives %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for live in lives %}
+            <div class="card bg-base-100 shadow-md hover:shadow-lg transition border border-base-300">
+                <div class="card-body">
+                    <h2 class="card-title text-lg line-clamp-2 text-primary">{{ live.title }}</h2>
+                    <p class="text-sm text-base-content/70 line-clamp-2">{{ live.description|default:"No description" }}</p>
+                    
+                    <div class="divider my-2"></div>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Input:</span>
+                            <span class="text-xs truncate">{{ live.file_or_url|truncatechars:20 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Output RTMP:</span>
+                            <span class="text-xs truncate">{{ live.output_rtmp|truncatechars:20 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Preset:</span>
+                            <span>{{ live.preset.preset_name|default:"None" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-actions justify-end mt-4">
+                        <button class="btn btn-sm btn-success" onclick="startLive({{ live.id }})">▶️ Start</button>
+                        <button class="btn btn-sm btn-error" onclick="viewLogs({{ live.id }})">📊 Logs</button>
+                        <a href="{% url 'edit_live' live.id %}" class="btn btn-sm btn-info">✏️ Edit</a>
+                        <a href="{% url 'delete_live' live.id %}" class="btn btn-sm btn-error">🗑️ Delete</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <svg class="stroke-current shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>No live streams available. Create one to get started!</span>
+    </div>
+{% endif %}
+
+<!-- Modal for Details -->
+<dialog id="detailModal" class="modal">
+    <div class="modal-box w-11/12 max-w-md">
+        <h3 class="font-bold text-lg">Live Stream Details</h3>
+        <div id="detailContent" class="py-4">
+            <div class="loading loading-spinner"></div>
+        </div>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<!-- Modal for Logs -->
+<dialog id="logsModal" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box w-11/12 sm:max-w-2xl">
+        <h3 class="font-bold text-lg">Live Stream Logs</h3>
+        <div id="logsContent" class="py-4 overflow-y-auto max-h-96">
+            <div class="loading loading-spinner"></div>
+        </div>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<script>
+    function startLive(liveId) {
+        if (confirm('Start this live stream?')) {
+            fetch(`/start-live/${liveId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => alert('Error: ' + error));
+        }
+    }
+
+    function viewDetails(liveId) {
+        const modal = document.getElementById('detailModal');
+        const content = document.getElementById('detailContent');
+        
+        fetch(`/live/${liveId}/`)
+            .then(response => response.json())
+            .then(data => {
+                content.innerHTML = `
+                    <div class="space-y-3">
+                        <div><strong>Title:</strong> ${data.title}</div>
+                        <div><strong>Description:</strong> ${data.description || 'N/A'}</div>
+                        <div><strong>Input:</strong> <code class="text-xs bg-base-300 p-1 rounded">${data.file_or_url}</code></div>
+                        <div><strong>Output RTMP:</strong> <code class="text-xs bg-base-300 p-1 rounded">${data.output_rtmp}</code></div>
+                        <div><strong>Preset:</strong> ${data.preset || 'None'}</div>
+                        <div><strong>Created:</strong> ${new Date(data.created_at).toLocaleString()}</div>
+                        <div><strong>Updated:</strong> ${new Date(data.updated_at).toLocaleString()}</div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-error">Error loading details: ${error}</div>`;
+            });
+        
+        modal.showModal();
+    }
+
+    function viewLogs(liveId) {
+        const modal = document.getElementById('logsModal');
+        const content = document.getElementById('logsContent');
+        
+        fetch(`/logs/${liveId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs.length === 0) {
+                    content.innerHTML = '<div class="alert alert-info">No logs available</div>';
+                } else {
+                    let html = '<div class="overflow-x-auto"><table class="table table-compact"><thead><tr><th>ID</th><th>PID</th><th>Status</th><th>Timestamp</th><th>Action</th></tr></thead><tbody>';
+                    data.logs.forEach(log => {
+                        html += `<tr>
+                            <td>${log.id}</td>
+                            <td>${log.pid}</td>
+                            <td><span class="badge ${log.status === 'running' ? 'badge-success' : 'badge-error'}">${log.status}</span></td>
+                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                            <td><button class="btn btn-xs btn-error" onclick="stopLive(${log.id})">Stop</button></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                    content.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                content.innerHTML = `<div class="alert alert-error">Error loading logs: ${error}</div>`;
+            });
+        
+        modal.showModal();
+    }
+
+    function stopLive(logId) {
+        if (confirm('Stop this live stream?')) {
+            fetch(`/stop-live/${logId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => alert('Error: ' + error));
+        }
+    }
+</script>
+{% endblock %}
