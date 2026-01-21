@@ -19,4 +19,6 @@ urlpatterns = [
     path('ffmpeg-configs/', views.list_ffmpeg_configs, name='list_ffmpeg_configs'),
     path('media-files/', views.view_media_files, name='view_media_files'),
     path('media-file/<int:media_id>/delete/', views.delete_media_file, name='delete_media_file'),
+    path('logout/', views.logout_view, name='logout'),
+    path('live/tiktok/', views.tiktok_live, name='tiktok_live'),
 ]

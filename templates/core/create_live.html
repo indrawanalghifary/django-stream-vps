@@ -43,13 +43,34 @@
                         <span class="label-text font-semibold">File or URL (Input Source)</span>
                     </label>
                     <div class="space-y-2">
-                        <div class="tabs tabs-bordered w-full">
+                        {% comment %} <div class="tabs tabs-bordered w-full">
                             <input type="radio" name="input_type" class="tab" value="media" checked onclick="toggleInputType('media')" />
                             <label class="tab-content">Media File</label>
 
                             <input type="radio" name="input_type" class="tab" value="url" onclick="toggleInputType('url')" />
                             <label class="tab-content">Custom URL</label>
+                        </div> {% endcomment %}
+                        <div class="tabs tabs-boxed w-full">
+                            <input 
+                                type="radio" 
+                                name="input_type" 
+                                class="tab" 
+                                aria-label="Media File"
+                                value="media"
+                                checked
+                                onclick="toggleInputType('media')"
+                            />
+
+                            <input 
+                                type="radio" 
+                                name="input_type" 
+                                class="tab"
+                                aria-label="Custom URL"
+                                value="url"
+                                onclick="toggleInputType('url')"
+                            />
                         </div>
+
                         
                         <!-- Media File Selection -->
                         <div id="media-input" class="space-y-2">
@@ -75,6 +96,11 @@
                         </div>
 
                         <!-- Custom URL Input -->
+                        <div id="url-input" class="hidden">
+                            <input type="text" placeholder="e.g., TikTok username" 
+                                   class="input input-bordered w-full" id="tiktok_username" />
+                            <button type="button" class="btn btn-secondary mt-2" onclick="fetchTiktokUrl()">Fetch TikTok URL</button>
+                        </div>
                         <div id="url-input" class="hidden">
                             <input type="text" placeholder="e.g., /path/to/file.mp4 or rtsp://stream.url" 
                                    class="input input-bordered w-full" id="custom_url" />
@@ -181,5 +207,27 @@
             customUrl.addEventListener('input', updateInputField);
         }
     });
+    function fetchTiktokUrl() {
+        const nama = document.getElementById("tiktok_username").value;
+
+        fetch("/live/tiktok/", {
+            method: "POST",
+            headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            body: JSON.stringify({
+            url_tiktok: nama
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("file_or_url_field").value = data.status ?? "Gagal mengambil URL TikTok";
+            {% comment %} JSON.stringify(data.status, null, 2); {% endcomment %}
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+    }
+
 </script>
 {% endblock %}

@@ -3,6 +3,7 @@ import os
 import logging
 import shlex
 from django.conf import settings
+from TikTokLive import TikTokLiveClient
 
 # Konfigurasi logging
 logging.basicConfig(
@@ -191,6 +192,15 @@ def start_live_stream(input_source, output_rtmp, ffmpeg_params):
         logger.error("Gagal memulai live stream")
 
     return pid
+
+
+async def get_url_tiktok(username):
+    client = TikTokLiveClient(unique_id=username)
+    await client.start()
+    room_info = await client.web.fetch_room_info(client.room_id)
+    url_tiktok = room_info.get("stream_url").get("rtmp_pull_url")
+    print(f"RTMF URL: {url_tiktok}")
+    return url_tiktok
 
 
 # if __name__ == '__main__':

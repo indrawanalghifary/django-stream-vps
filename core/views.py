@@ -1,9 +1,11 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from . import models, forms, services
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from asgiref.sync import async_to_sync
 # Create your views here.
 
 def login_view(request):
@@ -183,3 +185,22 @@ def delete_media_file(request, media_id):
         return redirect('view_media_files')
     return render(request, 'core/delete_media_confirm.html', {'media_file': media_file})
 
+
+@login_required
+def logout_view(request):
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect('login')
+
+
+@login_required
+def tiktok_live(request):
+    if request.method == 'POST':
+        # Placeholder for TikTok live streaming logic
+        data = json.loads(request.body)
+        url_tiktok = data.get('url_tiktok')
+        print(url_tiktok)
+        if url_tiktok is None or not "@" in url_tiktok :
+            return JsonResponse({'error': 'No TikTok username provided'}, status=400)
+        url = async_to_sync(services.get_url_tiktok)(url_tiktok)
+        return JsonResponse({'status': url})
