@@ -33,7 +33,11 @@
                     <li><a href="{% url 'list_ffmpeg_configs' %}">⚙️ FFmpeg Config</a></li>
                     <li><hr class="my-2 bg-base-300"></li>
                     <li><a href="/admin/">🔧 Admin</a></li>
-                    <li><a href="/accounts/logout/">🚪 Logout</a></li>
+                    {% comment %} <li><a href="/accounts/logout/">🚪 Logout</a></li> {% endcomment %}
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <li> <button type="submit">Logout</button> </li>
+                    </form>
                 </ul>
             </div>
         </div>

@@ -25,7 +25,20 @@ SECRET_KEY = 'django-insecure-kpv)!xy+v1xl%zw4c3#4dpsqp^3lfq&*pptt1s1($8rmmtjq+l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["django.inonedev.site"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://django.inonedev.site",
+]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = 'login'
+
 
 
 # Application definition

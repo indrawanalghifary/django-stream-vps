@@ -1,8 +1,10 @@
 from django.urls import path
+from django.contrib.auth.views import LoginView
 from . import views
 
 urlpatterns = [
-    path('login/', views.login_view, name='login'),
+    # path('login/', views.login_view, name='login'),
+    path('login/', LoginView.as_view(template_name='core/login.html'), name='login'),
     path('', views.home, name='home'),
     path('live/create/', views.create_live, name='create_live'),
     path('live/<int:live_id>/', views.live_detail, name='live_detail'),

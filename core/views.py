@@ -200,7 +200,7 @@ def tiktok_live(request):
         data = json.loads(request.body)
         url_tiktok = data.get('url_tiktok')
         print(url_tiktok)
-        if url_tiktok is None or not "@" in url_tiktok :
+        if url_tiktok is None :
             return JsonResponse({'error': 'No TikTok username provided'}, status=400)
         url = async_to_sync(services.get_url_tiktok)(url_tiktok)
         return JsonResponse({'status': url})

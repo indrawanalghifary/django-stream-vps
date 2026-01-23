@@ -195,14 +195,31 @@ def start_live_stream(input_source, output_rtmp, ffmpeg_params):
 
 
 async def get_url_tiktok(username):
-    client = TikTokLiveClient(unique_id=username)
-    await client.start()
-    room_info = await client.web.fetch_room_info(client.room_id)
-    url_tiktok = room_info.get("stream_url").get("rtmp_pull_url")
-    print(f"RTMF URL: {url_tiktok}")
-    return url_tiktok
+    try :
+        client = TikTokLiveClient(unique_id=username)
+        await client.start()
+        room_info = await client.web.fetch_room_info(client.room_id)
+        url_tiktok = room_info.get("stream_url").get("rtmp_pull_url")
+        print(f"RTMF URL: {url_tiktok}")
+        return url_tiktok
+    except Exception as e:
+        if "UserOfflineError" in str(e):
+            logger.error(f"TikTok user {username} is offline.")
+            return "User Offline"
+        logger.error(f"Error fetching TikTok URL for {username}: {str(e)}")
+        return "Error TikTok URL"
 
+async def get_tiktok(username):
+        client = TikTokLiveClient(unique_id="@toytoysjember")
+        await client.start()
+        room_info = await client.web.fetch_room_info(client.room_id)
+        print(room_info)
+        # url_tiktok = room_info.get("stream_url").get("rtmp_pull_url")
+        # print(f"RTMF URL: {url_tiktok}")
+        # return url_tiktok
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
 #     start_live_stream("/media/indrawan/MULTIMEDIA/KODING/belajar-django/belajar1/test.mp4", "rtmp://demo.flashphoner.com:1935/live/live_stream", "-c:v libx264 -b:v 3000k -c:a aac -b:a 160k")
+     import asyncio
+     asyncio.run(get_tiktok("@toytoysjember"))
