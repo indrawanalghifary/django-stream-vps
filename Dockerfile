@@ -1,39 +1,34 @@
-# Use official Python runtime as the base image
-FROM python:3.11-slim
 
-# Set environment variables
+FROM python:3.12-slim-bookworm
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=config.settings_docker
-ENV DOCKER_ENV=1
 
-# Set the working directory in the container
-WORKDIR /app
-
-# Install system dependencies including ffmpeg
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        build-essential \
-        libpq-dev \
-        ffmpeg \
-        curl \
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    build-essential \
+    libpq-dev \
+    ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file
-COPY requirements.txt .
+RUN mkdir -p /code
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /code
 
-# Copy the rest of the application code
-COPY . .
+# If you want to use poetry
+# RUN pip install poetry
+# COPY pyproject.toml poetry.lock /code/
+# RUN poetry config virtualenvs.create false
+# RUN poetry install --only main --no-root --no-interaction
 
-# Collect static files
+# If you want to use pip
+COPY requirements.txt /code/
+RUN pip install -r requirements.txt
+
+COPY . /code
+
 RUN python manage.py collectstatic --noinput
 
-# Expose port
-EXPOSE 8000
-
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+RUN chmod +x /code/entrypoint.sh
